@@ -339,13 +339,13 @@ class EmailSender:
         if not keywords:
             return ""
         badges = " ".join(
-            f'<span class="keyword-badge">{html.escape(kw)}</span>'
+            f'<span style="display:inline-block;background:#ffa726;color:#ffffff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;margin:4px;">{html.escape(kw)}</span>'
             for kw, _ in keywords[:5]
         )
         return f"""
-        <div class="keywords-section">
-            <strong>🔑 주요 키워드:</strong>
-            <div style="margin-top: 10px;">{badges}</div>
+        <div style="background:#ffffff;padding:20px;border-radius:8px;margin-bottom:20px;border-left:4px solid #ffa726;">
+            <strong style="color:#333333;">🔑 주요 키워드:</strong>
+            <div style="margin-top:10px;">{badges}</div>
         </div>
         """
 
@@ -359,19 +359,17 @@ class EmailSender:
         summary = NewsAI.simple_summarize(f"{title}. {description}", max_sentences=2)
 
         return f"""
-        <div class="news-item">
-            <div class="news-title">
-                <strong>{idx}.</strong>
-                <a href="{html.escape(link)}" target="_blank" rel="noopener noreferrer">{html.escape(title)}</a>
-                <span class="category-badge">{category}</span>
+        <div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;margin-bottom:20px;">
+            <div style="font-size:18px;font-weight:600;margin-bottom:12px;color:#1a1a1a;">
+                <strong style="color:#1a1a1a;">{idx}.</strong>
+                <a href="{html.escape(link)}" target="_blank" rel="noopener noreferrer" style="color:#1a56db;text-decoration:none;font-weight:600;">{html.escape(title)}</a>
+                <span style="display:inline-block;background:#e3f2fd;color:#1976d2;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:500;margin-left:10px;border:1px solid #bbdefb;">{category}</span>
             </div>
-            <div class="news-summary">
-                💡 <strong>AI 요약:</strong> {html.escape(summary)}
+            <div style="background:#f0f4ff;padding:12px;border-radius:6px;color:#444444;margin-bottom:10px;font-size:14px;line-height:1.6;border-left:3px solid #667eea;">
+                💡 <strong style="color:#333333;">AI 요약:</strong> {html.escape(summary)}
             </div>
-            <div class="news-description">{html.escape(description)}</div>
-            <div class="news-meta">
-                <span>🕐 {html.escape(pub_date)}</span>
-            </div>
+            <div style="color:#555555;margin-bottom:10px;line-height:1.5;">{html.escape(description)}</div>
+            <div style="font-size:13px;color:#888888;">🕐 {html.escape(pub_date)}</div>
         </div>
         """
 
@@ -381,7 +379,7 @@ class EmailSender:
         keyword: str,
         keywords: Optional[List[Tuple[str, float]]] = None,
     ) -> str:
-        """이메일 본문 생성 (HTML 형식)"""
+        """이메일 본문 생성 (HTML 인라인 스타일)"""
         KST = timezone(timedelta(hours=9))
         now = datetime.now(KST).strftime("%Y년 %m월 %d일 %H시 %M분")
 
@@ -391,7 +389,7 @@ class EmailSender:
             news_html = "\n".join(self._render_news_item(i, n) for i, n in enumerate(news_list, 1))
         else:
             news_html = """
-            <div class="no-news">
+            <div style="text-align:center;padding:60px 20px;color:#999999;background:#ffffff;border-radius:8px;">
                 <p>😴 최근 동안 새로운 기사가 없습니다.</p>
             </div>
             """
@@ -400,137 +398,22 @@ class EmailSender:
 
         return f"""
 <html>
-<head>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }}
-        .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }}
-        .header h1 {{ margin: 0; font-size: 28px; }}
-        .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
-        .summary {{
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }}
-        .keywords-section {{
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffa726;
-        }}
-        .keyword-badge {{
-            display: inline-block;
-            background: linear-gradient(135deg, #ffa726, #fb8c00);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            margin: 4px;
-        }}
-        .news-item {{
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }}
-        .news-title {{
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #1a1a1a;
-        }}
-        .news-title a {{
-            color: #667eea;
-            text-decoration: none;
-        }}
-        .news-title a:hover {{ text-decoration: underline; }}
-        .news-summary {{
-            background: #f0f4ff;
-            padding: 12px;
-            border-radius: 6px;
-            color: #444;
-            margin-bottom: 10px;
-            font-size: 14px;
-            line-height: 1.6;
-            border-left: 3px solid #667eea;
-        }}
-        .news-description {{
-            color: #666;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }}
-        .news-meta {{ font-size: 13px; color: #999; }}
-        .no-news {{
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-            background: white;
-            border-radius: 8px;
-        }}
-        .footer {{
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            text-align: center;
-            color: #999;
-            font-size: 13px;
-        }}
-        .ai-badge {{
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 8px;
-        }}
-        .category-badge {{
-            display: inline-block;
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-left: 10px;
-            border: 1px solid #bbdefb;
-        }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>📰 {html.escape(keyword)} 뉴스 알림 <span class="ai-badge">AI 강화</span></h1>
-        <p>{now} 기준 최근 {filter_hours}시간 이내 뉴스</p>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333333;max-width:800px;margin:0 auto;padding:20px;background-color:#f5f5f5;">
+    <div style="background:#4a6cf7;padding:30px;border-radius:10px;margin-bottom:20px;">
+        <h1 style="margin:0;font-size:24px;color:#ffffff;">📰 {html.escape(keyword)} 뉴스 알림 <span style="display:inline-block;background:#764ba2;color:#ffffff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px;">AI 강화</span></h1>
+        <p style="margin:10px 0 0 0;color:#e0e8ff;">{now} 기준 최근 {filter_hours}시간 이내 뉴스</p>
     </div>
 
-    <div class="summary">
-        <strong>📊 검색 결과:</strong> 총 {len(news_list)}건의 새로운 기사가 발견되었습니다.
+    <div style="background:#f8f9fa;padding:20px;border-radius:8px;margin-bottom:20px;border-left:4px solid #4a6cf7;">
+        <strong style="color:#333333;">📊 검색 결과:</strong> <span style="color:#333333;">총 {len(news_list)}건의 새로운 기사가 발견되었습니다.</span>
     </div>
 
     {keywords_html}
 
     {news_html}
 
-    <div class="footer">
+    <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center;color:#999999;font-size:13px;">
         <p>🤖 이 메일은 AI 기능이 강화된 뉴스봇이 자동으로 발송했습니다.</p>
         <p>매일 06:00 ~ 20:00 (KST), 30분 간격으로 뉴스를 검색합니다.</p>
     </div>
