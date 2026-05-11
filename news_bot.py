@@ -339,14 +339,18 @@ class EmailSender:
         if not keywords:
             return ""
         badges = " ".join(
-            f'<span style="display:inline-block;background:#ffa726;color:#ffffff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;margin:4px;">{html.escape(kw)}</span>'
+            f'<span style="display:inline-block;background-color:#fff3e0;color:#e65100;padding:6px 14px;font-size:13px;font-weight:bold;margin:4px;border:2px solid #e65100;">{html.escape(kw)}</span>'
             for kw, _ in keywords[:5]
         )
         return f"""
-        <div style="background:#ffffff;padding:20px;border-radius:8px;margin-bottom:20px;border-left:4px solid #ffa726;">
-            <strong style="color:#333333;">🔑 주요 키워드:</strong>
-            <div style="margin-top:10px;">{badges}</div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+          <tr>
+            <td bgcolor="#fff8e1" style="background-color:#fff8e1;padding:20px;border-left:4px solid #ffa726;">
+              <strong style="color:#333333;font-size:15px;">🔑 주요 키워드:</strong>
+              <div style="margin-top:10px;">{badges}</div>
+            </td>
+          </tr>
+        </table>
         """
 
     def _render_news_item(self, idx: int, news: Dict) -> str:
@@ -359,18 +363,25 @@ class EmailSender:
         summary = NewsAI.simple_summarize(f"{title}. {description}", max_sentences=2)
 
         return f"""
-        <div style="background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;margin-bottom:20px;">
-            <div style="font-size:18px;font-weight:600;margin-bottom:12px;color:#1a1a1a;">
-                <strong style="color:#1a1a1a;">{idx}.</strong>
-                <a href="{html.escape(link)}" target="_blank" rel="noopener noreferrer" style="color:#1a56db;text-decoration:none;font-weight:600;">{html.escape(title)}</a>
-                <span style="display:inline-block;background:#e3f2fd;color:#1976d2;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:500;margin-left:10px;border:1px solid #bbdefb;">{category}</span>
-            </div>
-            <div style="background:#f0f4ff;padding:12px;border-radius:6px;color:#444444;margin-bottom:10px;font-size:14px;line-height:1.6;border-left:3px solid #667eea;">
-                💡 <strong style="color:#333333;">AI 요약:</strong> {html.escape(summary)}
-            </div>
-            <div style="color:#555555;margin-bottom:10px;line-height:1.5;">{html.escape(description)}</div>
-            <div style="font-size:13px;color:#888888;">🕐 {html.escape(pub_date)}</div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;border:1px solid #cccccc;">
+          <tr>
+            <td bgcolor="#ffffff" style="background-color:#ffffff;padding:20px;">
+              <p style="margin:0 0 10px 0;font-size:17px;font-weight:bold;color:#1a1a1a;">
+                {idx}. <a href="{html.escape(link)}" target="_blank" rel="noopener noreferrer" style="color:#0047ab;font-weight:bold;text-decoration:underline;">{html.escape(title)}</a>
+                <span style="font-size:12px;color:#1565c0;font-weight:normal;border:1px solid #1565c0;padding:2px 8px;margin-left:8px;">{category}</span>
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+                <tr>
+                  <td bgcolor="#e8f0fe" style="background-color:#e8f0fe;padding:10px;border-left:3px solid #1a56db;font-size:14px;color:#1a1a1a;line-height:1.6;">
+                    💡 <strong style="color:#1a1a1a;">AI 요약:</strong> {html.escape(summary)}
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 8px 0;color:#444444;line-height:1.5;font-size:14px;">{html.escape(description)}</p>
+              <p style="margin:0;font-size:13px;color:#666666;">🕐 {html.escape(pub_date)}</p>
+            </td>
+          </tr>
+        </table>
         """
 
     def _create_email_body(
@@ -379,7 +390,7 @@ class EmailSender:
         keyword: str,
         keywords: Optional[List[Tuple[str, float]]] = None,
     ) -> str:
-        """이메일 본문 생성 (HTML 인라인 스타일)"""
+        """이메일 본문 생성 (Lotus Notes 호환 테이블 레이아웃)"""
         KST = timezone(timedelta(hours=9))
         now = datetime.now(KST).strftime("%Y년 %m월 %d일 %H시 %M분")
 
@@ -389,9 +400,11 @@ class EmailSender:
             news_html = "\n".join(self._render_news_item(i, n) for i, n in enumerate(news_list, 1))
         else:
             news_html = """
-            <div style="text-align:center;padding:60px 20px;color:#999999;background:#ffffff;border-radius:8px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+              <tr><td bgcolor="#ffffff" style="background-color:#ffffff;padding:60px 20px;text-align:center;color:#999999;">
                 <p>😴 최근 동안 새로운 기사가 없습니다.</p>
-            </div>
+              </td></tr>
+            </table>
             """
 
         filter_hours = int(os.getenv("FILTER_HOURS", "1"))
@@ -399,24 +412,47 @@ class EmailSender:
         return f"""
 <html>
 <head><meta charset="utf-8"></head>
-<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333333;max-width:800px;margin:0 auto;padding:20px;background-color:#f5f5f5;">
-    <div style="background:#4a6cf7;padding:30px;border-radius:10px;margin-bottom:20px;">
-        <h1 style="margin:0;font-size:24px;color:#ffffff;">📰 {html.escape(keyword)} 뉴스 알림 <span style="display:inline-block;background:#764ba2;color:#ffffff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px;">AI 강화</span></h1>
-        <p style="margin:10px 0 0 0;color:#e0e8ff;">{now} 기준 최근 {filter_hours}시간 이내 뉴스</p>
-    </div>
+<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333333;background-color:#f0f0f0;padding:20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:800px;margin:0 auto;">
+      <tr>
+        <td>
 
-    <div style="background:#f8f9fa;padding:20px;border-radius:8px;margin-bottom:20px;border-left:4px solid #4a6cf7;">
-        <strong style="color:#333333;">📊 검색 결과:</strong> <span style="color:#333333;">총 {len(news_list)}건의 새로운 기사가 발견되었습니다.</span>
-    </div>
+          <!-- 헤더 -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            <tr>
+              <td bgcolor="#1a3a8f" style="background-color:#1a3a8f;padding:25px;border-bottom:4px solid #ffa726;">
+                <h1 style="margin:0;font-size:22px;color:#ffffff;font-weight:bold;">📰 {html.escape(keyword)} 뉴스 알림</h1>
+                <p style="margin:8px 0 0 0;color:#c8d8ff;font-size:14px;">{now} 기준 최근 {filter_hours}시간 이내 뉴스</p>
+              </td>
+            </tr>
+          </table>
 
-    {keywords_html}
+          <!-- 검색 결과 요약 -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+            <tr>
+              <td bgcolor="#e8eeff" style="background-color:#e8eeff;padding:15px;border-left:4px solid #1a3a8f;">
+                <strong style="color:#1a1a1a;font-size:15px;">📊 검색 결과: 총 {len(news_list)}건의 새로운 기사가 발견되었습니다.</strong>
+              </td>
+            </tr>
+          </table>
 
-    {news_html}
+          {keywords_html}
 
-    <div style="margin-top:40px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center;color:#999999;font-size:13px;">
-        <p>🤖 이 메일은 AI 기능이 강화된 뉴스봇이 자동으로 발송했습니다.</p>
-        <p>매일 06:00 ~ 20:00 (KST), 30분 간격으로 뉴스를 검색합니다.</p>
-    </div>
+          {news_html}
+
+          <!-- 푸터 -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;">
+            <tr>
+              <td style="padding-top:20px;border-top:1px solid #cccccc;text-align:center;color:#888888;font-size:13px;">
+                <p style="margin:4px 0;">🤖 이 메일은 AI 기능이 강화된 뉴스봇이 자동으로 발송했습니다.</p>
+                <p style="margin:4px 0;">매일 06:00 ~ 20:00 (KST), 30분 간격으로 뉴스를 검색합니다.</p>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
 </body>
 </html>
 """
