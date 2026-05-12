@@ -226,8 +226,8 @@ class EmailSender:
     def __init__(self, gmail_user: str, gmail_password: str):
         self.gmail_user = gmail_user
         self.gmail_password = gmail_password
-        self.smtp_server = "smtp.naver.com"
-        self.smtp_port = 465
+        self.smtp_server = "smtp.gmail.com"
+        self.smtp_port = 587
 
     def send_news_email(
         self,
@@ -246,7 +246,8 @@ class EmailSender:
         msg.attach(MIMEText(body, 'html', 'utf-8'))
 
         try:
-            with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as server:
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
                 server.login(self.gmail_user, self.gmail_password)
                 server.send_message(msg)
             logger.info("이메일 전송 완료: %s", to_email)
