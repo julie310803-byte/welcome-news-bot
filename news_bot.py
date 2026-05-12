@@ -44,17 +44,6 @@ class NaverNewsSearcher:
         self.api_url = "https://openapi.naver.com/v1/search/news.json"
 
     def search_news(self, keyword: str, display: int = 100, sort: str = "date") -> List[Dict]:
-        """
-        뉴스 검색 수행 (실패 시 지수 백오프 재시도)
-
-        Args:
-            keyword: 검색 키워드
-            display: 검색 결과 수 (최대 100)
-            sort: 정렬 방식 (date: 날짜순, sim: 유사도순)
-
-        Returns:
-            검색된 뉴스 리스트
-        """
         headers = {
             "X-Naver-Client-Id": self.client_id,
             "X-Naver-Client-Secret": self.client_secret
@@ -86,7 +75,6 @@ class NaverNewsSearcher:
 class NewsAI:
     """AI 기반 뉴스 분석 클래스"""
 
-    # 카테고리별 키워드 정의
     CATEGORY_KEYWORDS = {
         "💰 금융": ["금융", "은행", "대출", "적금", "예금", "금리", "이자", "저축", "투자", "펀드", "주식", "채권"],
         "🏢 기업": ["기업", "회사", "사업", "경영", "CEO", "임원", "지점", "영업", "매출", "실적"],
@@ -100,21 +88,11 @@ class NewsAI:
 
     @staticmethod
     def clean_text(text: str) -> str:
-        """HTML 태그 제거 및 엔티티 디코딩"""
         tag_removed = re.sub(r'<[^>]+>', '', text)
         return html.unescape(tag_removed)
 
     @staticmethod
     def categorize_news(news: Dict) -> str:
-        """
-        뉴스 카테고리 자동 분류
-
-        Args:
-            news: 뉴스 딕셔너리
-
-        Returns:
-            카테고리 문자열
-        """
         title = NewsAI.clean_text(news.get("title", "")).lower()
         description = NewsAI.clean_text(news.get("description", "")).lower()
         full_text = f"{title} {description}"
@@ -131,16 +109,6 @@ class NewsAI:
 
     @staticmethod
     def extract_keywords(news_list: List[Dict], top_n: int = 5) -> List[Tuple[str, float]]:
-        """
-        TF-IDF를 사용한 키워드 추출
-
-        Args:
-            news_list: 뉴스 리스트
-            top_n: 추출할 상위 키워드 개수
-
-        Returns:
-            (키워드, 점수) 튜플 리스트
-        """
         if not news_list:
             return []
 
@@ -168,16 +136,6 @@ class NewsAI:
 
     @staticmethod
     def simple_summarize(text: str, max_sentences: int = 2) -> str:
-        """
-        간단한 문장 추출 기반 요약
-
-        Args:
-            text: 요약할 텍스트
-            max_sentences: 최대 문장 수
-
-        Returns:
-            요약된 텍스트
-        """
         if not text:
             return ""
 
@@ -195,15 +153,6 @@ class NewsAI:
 
     @staticmethod
     def calculate_similarity_matrix(news_list: List[Dict]) -> np.ndarray:
-        """
-        뉴스 간 유사도 매트릭스 계산
-
-        Args:
-            news_list: 뉴스 리스트
-
-        Returns:
-            유사도 매트릭스 (n x n)
-        """
         if not news_list:
             return np.array([])
 
@@ -226,16 +175,6 @@ class NewsFilter:
 
     @staticmethod
     def filter_recent_news(news_list: List[Dict], hours: int = 2) -> List[Dict]:
-        """
-        최근 N시간 이내의 뉴스만 필터링
-
-        Args:
-            news_list: 뉴스 리스트
-            hours: 필터링할 시간 범위
-
-        Returns:
-            필터링된 뉴스 리스트
-        """
         KST = timezone(timedelta(hours=9))
         cutoff_time = datetime.now(KST) - timedelta(hours=hours)
         filtered_news = []
@@ -257,16 +196,6 @@ class NewsFilter:
 
     @staticmethod
     def remove_duplicates_smart(news_list: List[Dict], similarity_threshold: float = 0.7) -> List[Dict]:
-        """
-        유사도 기반 중복 제거
-
-        Args:
-            news_list: 뉴스 리스트
-            similarity_threshold: 유사도 임계값 (0.0 ~ 1.0)
-
-        Returns:
-            중복이 제거된 뉴스 리스트
-        """
         if not news_list:
             return []
 
@@ -297,8 +226,8 @@ class EmailSender:
     def __init__(self, gmail_user: str, gmail_password: str):
         self.gmail_user = gmail_user
         self.gmail_password = gmail_password
-        self.smtp_server = "smtp.gmail.com"
-        self.smtp_port = 587
+        self.smtp_server = "smtp.naver.com"
+        self.smtp_port = 465
 
     def send_news_email(
         self,
@@ -307,15 +236,6 @@ class EmailSender:
         keyword: str,
         keywords: Optional[List[Tuple[str, float]]] = None,
     ):
-        """
-        뉴스 결과를 이메일로 전송
-
-        Args:
-            to_email: 수신자 이메일 (쉼표로 구분 가능)
-            news_list: 뉴스 리스트
-            keyword: 검색 키워드
-            keywords: 추출된 키워드 리스트
-        """
         subject = f"[뉴스봇] {keyword} 최신 뉴스 ({len(news_list)}건)"
         body = self._create_email_body(news_list, keyword, keywords)
 
@@ -326,8 +246,7 @@ class EmailSender:
         msg.attach(MIMEText(body, 'html', 'utf-8'))
 
         try:
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
+            with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as server:
                 server.login(self.gmail_user, self.gmail_password)
                 server.send_message(msg)
             logger.info("이메일 전송 완료: %s", to_email)
