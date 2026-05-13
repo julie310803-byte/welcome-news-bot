@@ -396,7 +396,7 @@ class EmailSender:
             </div>
             """
 
-        filter_hours = int(os.getenv("FILTER_HOURS", "1"))
+        filter_hours = int(os.getenv("FILTER_HOURS", "2"))
 
         return f"""
 <html>
@@ -566,7 +566,7 @@ def main():
         sys.exit(1)
 
     keyword = "웰컴저축은행"
-    filter_hours = int(os.getenv("FILTER_HOURS", "1"))
+    filter_hours = int(os.getenv("FILTER_HOURS", "2"))
 
     logger.info("검색 키워드: %s", keyword)
     logger.info("수신 이메일: %s", to_email)
@@ -586,7 +586,7 @@ def main():
 
     # 3. AI 기반 중복 제거
     logger.info("3️⃣ AI 기반 중복 기사 제거 중...")
-    unique_news = NewsFilter.remove_duplicates_smart(recent_news, similarity_threshold=0.7)
+    unique_news = NewsFilter.remove_duplicates_smart(recent_news, similarity_threshold=0.85)
     logger.info(" 중복 제거 후 %d건", len(unique_news))
 
     # 4. AI 키워드 추출

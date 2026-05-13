@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      FILTER_HOURS: '1'
+      FILTER_HOURS: '2'
 
     steps:
       - name: 코드 체크아웃
